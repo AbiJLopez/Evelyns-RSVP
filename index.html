@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evelyn's First Birthday 🎂</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; background: #FDF6F0; }
+
+    /* ── Confetti ── */
+    .confetti-piece {
+      position: fixed; top: -10px; pointer-events: none; z-index: 999;
+      animation: fall 1.8s ease-in forwards;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── Shared ── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    .hero {
+      background: linear-gradient(160deg, #C45C7A 0%, #E8899A 60%, #F2C4CE 100%);
+      padding: 52px 24px 44px; text-align: center;
+    }
+    .hero-emoji { font-size: 52px; line-height: 1; margin-bottom: 12px; }
+    .hero-eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,255,255,0.75); margin-bottom: 8px; }
+    .hero-title { font-size: 30px; font-weight: 700; color: #fff; line-height: 1.15; margin-bottom: 6px; }
+    .hero-date { font-size: 14px; color: rgba(255,255,255,0.85); margin-top: 10px; }
+    .hero-time { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+    .hero-sm {
+      background: linear-gradient(135deg, #C45C7A, #E8899A);
+      padding: 28px 24px 24px; text-align: center;
+    }
+    .hero-sm-eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.75); margin-bottom: 4px; }
+    .hero-sm-title { font-size: 22px; font-weight: 700; color: #fff; }
+    .hero-sm-sub { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+
+    .body-pad { flex: 1; padding: 32px 24px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      display: block; width: 100%; padding: 15px;
+      background: linear-gradient(135deg, #C45C7A, #E8899A);
+      color: #fff; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700; font-family: Georgia, serif;
+      cursor: pointer; margin-bottom: 10px;
+    }
+    .btn-ghost {
+      display: block; width: 100%; padding: 14px;
+      background: transparent; color: #C45C7A;
+      border: 1px solid #F2C4CE; border-radius: 14px;
+      font-size: 15px; font-weight: 600; font-family: Georgia, serif;
+      cursor: pointer; margin-bottom: 10px;
+    }
+    .btn-gold {
+      display: block; width: 100%; padding: 14px;
+      background: #D4A853; color: #2D1B2E;
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700; font-family: Georgia, serif;
+      cursor: pointer; margin-bottom: 10px;
+    }
+    .btn-dark-ghost {
+      display: block; width: 100%; padding: 12px;
+      background: transparent; color: rgba(255,255,255,0.4);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;
+      font-size: 13px; font-family: Georgia, serif; cursor: pointer; margin-bottom: 10px;
+    }
+
+    /* ── Name search ── */
+    .search-wrap { position: relative; margin-bottom: 12px; }
+    .name-input {
+      width: 100%; padding: 15px 16px;
+      border: 2px solid #F2C4CE; border-radius: 14px;
+      font-size: 16px; font-family: Georgia, serif;
+      background: #fff; color: #2D1B2E; outline: none;
+    }
+    .name-input.error { border-color: #E8899A; }
+    .suggestions {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #fff; border: 1px solid #F2C4CE; border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(196,92,122,0.15); z-index: 10; overflow: hidden;
+    }
+    .suggestion-item {
+      display: block; width: 100%; padding: 13px 16px;
+      background: none; border: none; border-bottom: 1px solid #F2C4CE;
+      text-align: left; font-size: 15px; font-family: Georgia, serif;
+      color: #2D1B2E; cursor: pointer; font-weight: 500;
+    }
+    .suggestion-item:last-child { border-bottom: none; }
+    .search-error { color: #C45C7A; font-size: 13px; text-align: center; margin-bottom: 10px; display: none; }
+    .host-links { text-align: center; border-top: 1px solid #F2C4CE; padding-top: 20px; display: flex; justify-content: center; gap: 16px; }
+    .host-link { background: none; border: none; color: #C45C7A; font-size: 12px; cursor: pointer; font-family: Georgia, serif; opacity: 0.7; }
+
+    /* ── RSVP form ── */
+    .rsvp-question { font-size: 16px; font-weight: 600; color: #2D1B2E; margin-bottom: 16px; text-align: center; }
+    .attend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .attend-btn {
+      padding: 16px 10px; font-size: 13px; font-weight: 600;
+      border: 2px solid #F2C4CE; border-radius: 14px;
+      background: #fff; color: #2D1B2E;
+      cursor: pointer; font-family: Georgia, serif; line-height: 1.4;
+      transition: all .2s;
+    }
+    .attend-btn.selected-yes { background: #C45C7A; border-color: #C45C7A; color: #fff; }
+    .attend-btn.selected-no  { background: #666; border-color: #666; color: #fff; }
+
+    .party-size-wrap { margin-bottom: 20px; display: none; }
+    .party-size-label { font-size: 13px; color: #2D1B2E; opacity: 0.65; margin-bottom: 10px; }
+    .party-size-row { display: flex; align-items: center; gap: 16px; justify-content: center; }
+    .size-btn {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 2px solid #F2C4CE; background: #fff;
+      font-size: 22px; cursor: pointer; color: #C45C7A; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .size-display { font-size: 32px; font-weight: 700; color: #2D1B2E; min-width: 40px; text-align: center; }
+
+    .extra-fields { display: none; }
+    .field-label { font-size: 13px; color: #2D1B2E; opacity: 0.65; margin-bottom: 8px; }
+    .field-note { font-size: 11px; color: #2D1B2E; opacity: 0.4; margin-top: 4px; }
+    .text-input, .text-area {
+      width: 100%; padding: 12px 14px; margin-bottom: 16px;
+      border: 2px solid #F2C4CE; border-radius: 12px;
+      font-size: 15px; font-family: Georgia, serif;
+      background: #fff; color: #2D1B2E; outline: none;
+    }
+    .text-area { resize: none; font-size: 14px; margin-bottom: 0; }
+
+    .submit-btn {
+      display: block; width: 100%; padding: 15px; margin-top: 24px;
+      background: linear-gradient(135deg, #C45C7A, #E8899A);
+      color: #fff; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700; font-family: Georgia, serif;
+      cursor: pointer; opacity: 0.35; margin-bottom: 10px;
+    }
+    .submit-btn.ready { opacity: 1; }
+
+    /* ── Done screen ── */
+    #screen-done { align-items: center; justify-content: center; padding: 40px 24px; text-align: center; background: #FDF6F0; }
+    .done-emoji { font-size: 64px; margin-bottom: 16px; }
+    .done-title { font-size: 26px; font-weight: 700; color: #C45C7A; margin-bottom: 8px; }
+    .done-msg { font-size: 15px; color: #2D1B2E; opacity: 0.7; line-height: 1.6; max-width: 320px; margin-bottom: 28px; }
+    .sms-badge { background: #F9EEF3; border: 1px solid #F2C4CE; border-radius: 14px; padding: 14px 20px; font-size: 13px; color: #C45C7A; margin-bottom: 28px; }
+
+    /* ── Host dashboard ── */
+    #screen-host { background: #2D1B2E; color: #fff; }
+    #screen-host .hero-sm { margin-bottom: 0; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 20px 16px 0; }
+    .stat-card { background: rgba(255,255,255,0.07); border-radius: 12px; padding: 14px 10px; text-align: center; }
+    .stat-num { font-size: 28px; font-weight: 700; }
+    .stat-label { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+    .stat-sub { font-size: 10px; margin-top: 2px; }
+    .section-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; margin-bottom: 12px; }
+    .guest-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+    .guest-row { display: flex; justify-content: space-between; align-items: center; }
+    .guest-name { font-weight: 600; font-size: 15px; }
+    .guest-phone { font-size: 11px; opacity: 0.45; margin-top: 2px; }
+    .pill { border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; border: 1px solid; }
+    .guest-detail { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); font-size: 12px; opacity: 0.7; display: none; }
+    .host-actions { padding: 20px 16px 0; display: flex; gap: 10px; flex-direction: column; }
+
+    /* ── Admin ── */
+    #screen-admin { background: #2D1B2E; color: #fff; }
+    .admin-body { padding: 20px 16px; }
+    .admin-input {
+      width: 100%; background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+      padding: 12px 14px; color: #fff; font-size: 14px;
+      font-family: Georgia, serif; margin-bottom: 10px; outline: none;
+    }
+    .admin-guest-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+    .admin-guest-name { font-weight: 600; }
+    .remove-btn { background: transparent; border: none; color: #E8899A; cursor: pointer; font-size: 20px; line-height: 1; }
+    .admin-actions { display: flex; gap: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<!-- ══ ENTER NAME ══ -->
+<div id="screen-enter" class="screen active">
+  <div class="hero">
+    <div class="hero-emoji">🎂</div>
+    <div class="hero-eyebrow">You're invited to</div>
+    <div class="hero-title">Evelyn's<br>First Birthday</div>
+    <div class="hero-date">Saturday, August 1st, 2026</div>
+    <div class="hero-time">1:00 PM – 4:00 PM</div>
+  </div>
+  <div class="body-pad">
+    <p style="font-size:13px;color:#2D1B2E;opacity:.6;margin-bottom:8px;text-align:center;">Type your name to find your invitation</p>
+    <div class="search-wrap">
+      <input id="name-input" class="name-input" type="text" placeholder="e.g. Johnson or Aunt Sarah" autocomplete="off" />
+      <div id="suggestions" class="suggestions"></div>
+    </div>
+    <div id="search-error" class="search-error"></div>
+    <button class="btn-primary" onclick="handleSearch()">Find My Invitation →</button>
+    <div class="host-links">
+      <button class="host-link" onclick="showScreen('host')">View Responses</button>
+      <button class="host-link" onclick="showScreen('admin')">Manage Guest List</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RSVP FORM ══ -->
+<div id="screen-rsvp" class="screen">
+  <div class="hero-sm">
+    <div class="hero-sm-eyebrow">Your Invitation</div>
+    <div id="rsvp-guest-name" class="hero-sm-title"></div>
+    <div class="hero-sm-sub">Saturday, August 1st, 2026 · 1:00 PM – 4:00 PM</div>
+  </div>
+  <div class="body-pad">
+    <div class="rsvp-question">Will you be joining us? 🎀</div>
+    <div class="attend-grid">
+      <button class="attend-btn" id="btn-yes" onclick="selectAttending(true)">🎉 Yes, we'll be there!</button>
+      <button class="attend-btn" id="btn-no"  onclick="selectAttending(false)">😢 Sorry, can't make it</button>
+    </div>
+
+    <div class="party-size-wrap" id="party-size-wrap">
+      <div class="party-size-label">How many guests in your party?</div>
+      <div class="party-size-row">
+        <button class="size-btn" onclick="changeSize(-1)">−</button>
+        <span class="size-display" id="size-display">1</span>
+        <button class="size-btn" onclick="changeSize(1)">+</button>
+      </div>
+    </div>
+
+    <div class="extra-fields" id="extra-fields">
+      <div class="field-label">Your phone number <span style="color:#E8899A">*</span></div>
+      <input class="text-input" id="phone-input" type="tel" placeholder="(555) 555-5555" oninput="checkReady()" />
+      <div class="field-note" style="margin-top:-10px;margin-bottom:16px;">We'll send a confirmation text to this number.</div>
+      <div class="field-label">Anything you'd like us to know? (optional)</div>
+      <textarea class="text-area" id="note-input" rows="3" placeholder="Dietary needs, a sweet message for Evelyn…"></textarea>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitRSVP()">Send My RSVP ✓</button>
+    <button class="btn-ghost" onclick="showScreen('enter')">← Back</button>
+  </div>
+</div>
+
+<!-- ══ DONE ══ -->
+<div id="screen-done" class="screen">
+  <div id="done-emoji" class="done-emoji"></div>
+  <div id="done-title" class="done-title"></div>
+  <div id="done-msg"   class="done-msg"></div>
+  <div class="sms-badge" id="sms-badge">📱 Sending text confirmation…</div>
+  <button class="btn-primary" style="max-width:280px;" onclick="resetToStart()">Done</button>
+</div>
+
+<!-- ══ HOST DASHBOARD ══ -->
+<div id="screen-host" class="screen">
+  <div class="hero-sm">
+    <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;opacity:.85;margin-bottom:6px;">Host Dashboard</div>
+    <div style="font-size:26px;font-weight:700;">Evelyn's First Birthday 🎀</div>
+    <div style="font-size:14px;margin-top:4px;opacity:.9;">Saturday, August 1st, 2026 · 1:00 PM – 4:00 PM</div>
+  </div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div style="padding:20px 16px 0;">
+    <div class="section-label">All Guests</div>
+    <div id="guest-list"></div>
+  </div>
+  <div class="host-actions">
+    <button class="btn-gold" onclick="downloadCSV()">⬇ Download CSV</button>
+    <button class="btn-dark-ghost" onclick="showScreen('enter')">← Back</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN ══ -->
+<div id="screen-admin" class="screen">
+  <div class="hero-sm">
+    <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;opacity:.8;margin-bottom:4px;">Guest List Manager</div>
+    <div style="font-size:20px;font-weight:700;">Evelyn's First Birthday 🎀</div>
+  </div>
+  <div class="admin-body">
+    <div class="section-label">Add Guest</div>
+    <input class="admin-input" id="admin-name" type="text" placeholder="e.g. The Smith Family or Cousin Jake" />
+    <button class="btn-primary" style="margin-bottom:24px;" onclick="addGuest()">Add Guest</button>
+    <div class="section-label" id="admin-count">Guest List</div>
+    <div id="admin-list"></div>
+    <div class="admin-actions">
+      <button class="btn-dark-ghost" style="flex:1" onclick="showScreen('host')">View Responses</button>
+      <button class="btn-dark-ghost" style="flex:1" onclick="showScreen('enter')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const STORAGE_KEY = "evelyn_rsvp_html_v1";
+
+let guests = [
+  { id:"g1", name:"The Johnson Family" },
+  { id:"g2", name:"The Martinez Family" },
+  { id:"g3", name:"The Williams Family" },
+  { id:"g4", name:"The Davis Family" },
+  { id:"g5", name:"Aunt Sarah" },
+  { id:"g6", name:"Uncle Mike" },
+  { id:"g7", name:"Grandma & Grandpa" },
+  { id:"g8", name:"The Taylor Family" },
+];
+let responses  = {};
+let currentGuest = null;
+let attending    = null;
+let partySize    = 1;
+
+// ── Persist ────────────────────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ guests, responses })); } catch(_) {}
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    if (d.guests)    guests    = d.guests;
+    if (d.responses) responses = d.responses;
+  } catch(_) {}
+}
+
+// ── Fuzzy match ────────────────────────────────────────────────────────────
+function fuzzy(query, name) {
+  const q = query.toLowerCase().replace(/[^a-z0-9 ]/g,"").trim();
+  const n = name.toLowerCase().replace(/[^a-z0-9 ]/g,"").trim();
+  if (q.length < 2) return false;
+  const qw = q.split(" ").filter(Boolean);
+  const nw = n.split(" ").filter(Boolean);
+  return n.includes(q) || q.includes(n) || qw.some(a => nw.some(b => b.startsWith(a) || a.startsWith(b)));
+}
+
+// ── Screen routing ─────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-"+id).classList.add("active");
+  if (id === "host")  renderDashboard();
+  if (id === "admin") renderAdmin();
+  window.scrollTo(0,0);
+}
+
+// ── Name search ────────────────────────────────────────────────────────────
+const nameInput = document.getElementById("name-input");
+const suggestBox = document.getElementById("suggestions");
+const searchError = document.getElementById("search-error");
+
+nameInput.addEventListener("input", () => {
+  searchError.style.display = "none";
+  nameInput.classList.remove("error");
+  const val = nameInput.value;
+  if (val.trim().length < 2) { suggestBox.style.display = "none"; suggestBox.innerHTML = ""; return; }
+  const matches = guests.filter(g => fuzzy(val, g.name)).slice(0,4);
+  if (!matches.length) { suggestBox.style.display = "none"; return; }
+  suggestBox.innerHTML = matches.map(g =>
+    `<button class="suggestion-item" onclick="selectGuest('${g.id}')">🎀 ${g.name}</button>`
+  ).join("");
+  suggestBox.style.display = "block";
+});
+
+nameInput.addEventListener("keydown", e => { if (e.key === "Enter") handleSearch(); });
+document.addEventListener("click", e => { if (!e.target.closest(".search-wrap")) suggestBox.style.display = "none"; });
+
+function handleSearch() {
+  const val = nameInput.value.trim();
+  const matches = guests.filter(g => fuzzy(val, g.name));
+  if (matches.length === 1) { selectGuest(matches[0].id); return; }
+  if (matches.length > 1) { showError("We found a few matches — tap your name above."); return; }
+  showError("We couldn't find that name. Try your last name or family name.");
+}
+
+function showError(msg) {
+  searchError.textContent = msg;
+  searchError.style.display = "block";
+  nameInput.classList.add("error");
+}
+
+function selectGuest(id) {
+  currentGuest = guests.find(g => g.id === id);
+  suggestBox.style.display = "none";
+  attending = null; partySize = 1;
+  document.getElementById("rsvp-guest-name").textContent = currentGuest.name;
+  document.getElementById("btn-yes").className = "attend-btn";
+  document.getElementById("btn-no").className  = "attend-btn";
+  document.getElementById("party-size-wrap").style.display = "none";
+  document.getElementById("extra-fields").style.display = "none";
+  document.getElementById("size-display").textContent = "1";
+  document.getElementById("phone-input").value = "";
+  document.getElementById("note-input").value  = "";
+  document.getElementById("submit-btn").className = "submit-btn";
+  showScreen("rsvp");
+}
+
+// ── RSVP form ──────────────────────────────────────────────────────────────
+function selectAttending(val) {
+  attending = val;
+  document.getElementById("btn-yes").className = "attend-btn" + (val === true  ? " selected-yes" : "");
+  document.getElementById("btn-no").className  = "attend-btn" + (val === false ? " selected-no"  : "");
+  document.getElementById("party-size-wrap").style.display = val ? "block" : "none";
+  document.getElementById("extra-fields").style.display = "block";
+  checkReady();
+}
+
+function changeSize(delta) {
+  partySize = Math.max(1, Math.min(12, partySize + delta));
+  document.getElementById("size-display").textContent = partySize;
+}
+
+function checkReady() {
+  const phone = document.getElementById("phone-input").value.trim();
+  const btn = document.getElementById("submit-btn");
+  btn.className = "submit-btn" + (attending !== null && phone ? " ready" : "");
+}
+
+function submitRSVP() {
+  const phone = document.getElementById("phone-input").value.trim();
+  if (attending === null || !phone) return;
+  const note = document.getElementById("note-input").value.trim();
+  const now  = new Date().toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+  responses[currentGuest.id] = { attending, partySize, phone, note, submittedAt: now };
+  save();
+
+  // Done screen
+  document.getElementById("done-emoji").textContent = attending ? "🎉" : "💌";
+  document.getElementById("done-title").textContent = attending ? "See you there!" : "We'll miss you!";
+  document.getElementById("done-msg").textContent   = attending
+    ? "Can't wait to celebrate Evelyn's big day with you! A confirmation text is on its way. 🎂"
+    : "Thank you for letting us know. We'll be thinking of you! A text confirmation is on its way.";
+  document.getElementById("sms-badge").textContent = "📱 Sending text confirmation…";
+  showScreen("done");
+  launchConfetti();
+  setTimeout(() => { document.getElementById("sms-badge").textContent = "📱 Text confirmation sent!"; }, 1200);
+}
+
+function resetToStart() {
+  nameInput.value = "";
+  searchError.style.display = "none";
+  currentGuest = null;
+  showScreen("enter");
+}
+
+// ── Confetti ───────────────────────────────────────────────────────────────
+function launchConfetti() {
+  const colors = ["#F2C4CE","#E8899A","#D4A853","#C45C7A","#a8d8ea","#fff"];
+  for (let i = 0; i < 28; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    el.style.left   = Math.random()*100 + "%";
+    el.style.width  = el.style.height = (6 + Math.random()*8) + "px";
+    el.style.background = colors[i % colors.length];
+    el.style.borderRadius = Math.random() > .5 ? "50%" : "2px";
+    el.style.animationDelay = (Math.random()*.6) + "s";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2400);
+  }
+}
+
+// ── Host dashboard ─────────────────────────────────────────────────────────
+function renderDashboard() {
+  const att  = guests.filter(g => responses[g.id]?.attending === true);
+  const dec  = guests.filter(g => responses[g.id]?.attending === false);
+  const pend = guests.filter(g => !responses[g.id]);
+  const total = att.reduce((s,g) => s + (responses[g.id]?.partySize||1), 0);
+
+  document.getElementById("stats-grid").innerHTML = `
+    <div class="stat-card"><div class="stat-num" style="color:#6fcf97">${att.length}</div><div class="stat-label">Attending</div><div class="stat-sub" style="color:#6fcf97">${total} total guests</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#E8899A">${dec.length}</div><div class="stat-label">Declining</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#D4A853">${pend.length}</div><div class="stat-label">Pending</div></div>
+  `;
+
+  document.getElementById("guest-list").innerHTML = guests.map(g => {
+    const r = responses[g.id];
+    const s = !r ? "pending" : r.attending ? "yes" : "no";
+    const pill = {
+      yes:     { bg:"#6fcf9722", border:"#6fcf97", color:"#6fcf97", label:"✓ Attending" },
+      no:      { bg:"#E8899A22", border:"#E8899A", color:"#E8899A", label:"✗ Declining" },
+      pending: { bg:"#D4A85322", border:"#D4A853", color:"#D4A853", label:"⏳ Pending" },
+    }[s];
+    const detail = r ? `<div class="guest-detail" style="display:block;">
+      ${r.attending ? `Party of <strong style="color:#D4A853">${r.partySize}</strong> · ` : ""}
+      ${r.note ? `"${r.note}" · ` : ""}
+      <span style="opacity:.5">${r.submittedAt}</span>
+    </div>` : "";
+    return `<div class="guest-card">
+      <div class="guest-row">
+        <div>
+          <div class="guest-name">${g.name}</div>
+          ${r?.phone ? `<div class="guest-phone">${r.phone}</div>` : ""}
+        </div>
+        <div class="pill" style="background:${pill.bg};border-color:${pill.border};color:${pill.color}">${pill.label}</div>
+      </div>
+      ${detail}
+    </div>`;
+  }).join("");
+}
+
+function downloadCSV() {
+  const rows = [["Name","Phone","Party Size","Status","Note","Submitted At"]];
+  guests.forEach(g => {
+    const r = responses[g.id];
+    rows.push(r
+      ? [g.name, r.phone||"", r.partySize, r.attending?"Attending":"Not Attending", r.note||"", r.submittedAt]
+      : [g.name,"","","Pending","",""]
+    );
+  });
+  const csv  = rows.map(r => r.map(v=>`"${v}"`).join(",")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a"); a.href=url; a.download="evelyns-rsvp.csv"; a.click();
+}
+
+// ── Admin ──────────────────────────────────────────────────────────────────
+function renderAdmin() {
+  document.getElementById("admin-count").textContent = `Guest List (${guests.length})`;
+  document.getElementById("admin-list").innerHTML = guests.map(g =>
+    `<div class="admin-guest-row">
+      <span class="admin-guest-name">${g.name}</span>
+      <button class="remove-btn" onclick="removeGuest('${g.id}')">×</button>
+    </div>`
+  ).join("");
+}
+
+function addGuest() {
+  const name = document.getElementById("admin-name").value.trim();
+  if (!name) return;
+  guests.push({ id:"g"+Date.now(), name });
+  document.getElementById("admin-name").value = "";
+  save(); renderAdmin();
+}
+
+function removeGuest(id) {
+  guests = guests.filter(g => g.id !== id);
+  save(); renderAdmin();
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+load();
+</script>
+</body>
+</html>
