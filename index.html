@@ -431,21 +431,20 @@ async function submitRSVP() {
   showScreen("done");
   launchConfetti();
 
-  // Send to Google Sheets
+  // Send to Google Sheets via GET with URL parameters
   try {
-    await fetch(SHEET_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name:        currentGuest.name,
-        phone:       phone,
-        status:      attending ? "Attending" : "Not Attending",
-        partySize:   attending ? partySize : 0,
-        note:        note,
-        submittedAt: now,
-      }),
-    });
+   const params = new URLSearchParams({
+     name:        currentGuest.name,
+     phone:       phone,
+     status:      attending ? "Attending" : "Not Attending",
+     partySize:   attending ? partySize : 0,
+     note:        note,
+     submittedAt: now,
+   });
+   await fetch(SHEET_URL + "?" + params.toString(), {
+     method: "GET",   // ← changed from POST to GET
+     mode: "no-cors",
+   });
     document.getElementById("sms-badge").textContent = "✅ Response saved!";
   } catch(err) {
     document.getElementById("sms-badge").textContent = "⚠️ Couldn't save — check your connection.";
