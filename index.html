@@ -409,24 +409,47 @@ function checkReady() {
   btn.className = "submit-btn" + (attending !== null && phone ? " ready" : "");
 }
 
-function submitRSVP() {
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxQkQiogxWydCbYNidX_ToFGijWue_aaw5MVdjrsk0eOU418uN_iXpFKZGfAG6iYXGH/exec";
+
+async function submitRSVP() {
   const phone = document.getElementById("phone-input").value.trim();
   if (attending === null || !phone) return;
   const note = document.getElementById("note-input").value.trim();
   const now  = new Date().toLocaleString("en-US", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+
+  // Save locally
   responses[currentGuest.id] = { attending, partySize, phone, note, submittedAt: now };
   save();
 
-  // Done screen
+  // Show done screen immediately so guest isn't waiting
   document.getElementById("done-emoji").textContent = attending ? "🎉" : "💌";
   document.getElementById("done-title").textContent = attending ? "See you there!" : "We'll miss you!";
   document.getElementById("done-msg").textContent   = attending
     ? "Can't wait to celebrate Evelyn's big day with you! A confirmation text is on its way. 🎂"
     : "Thank you for letting us know. We'll be thinking of you! A text confirmation is on its way.";
-  document.getElementById("sms-badge").textContent = "📱 Sending text confirmation…";
+  document.getElementById("sms-badge").textContent = "📱 Sending confirmation…";
   showScreen("done");
   launchConfetti();
-  setTimeout(() => { document.getElementById("sms-badge").textContent = "📱 Text confirmation sent!"; }, 1200);
+
+  // Send to Google Sheets
+  try {
+    await fetch(SHEET_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name:        currentGuest.name,
+        phone:       phone,
+        status:      attending ? "Attending" : "Not Attending",
+        partySize:   attending ? partySize : 0,
+        note:        note,
+        submittedAt: now,
+      }),
+    });
+    document.getElementById("sms-badge").textContent = "✅ Response saved!";
+  } catch(err) {
+    document.getElementById("sms-badge").textContent = "⚠️ Couldn't save — check your connection.";
+  }
 }
 
 function resetToStart() {
