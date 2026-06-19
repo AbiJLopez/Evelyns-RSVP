@@ -433,18 +433,18 @@ async function submitRSVP() {
 
   // Send to Google Sheets via GET with URL parameters
   try {
-   const params = new URLSearchParams({
-     name:        currentGuest.name,
-     phone:       phone,
-     status:      attending ? "Attending" : "Not Attending",
-     partySize:   attending ? partySize : 0,
-     note:        note,
-     submittedAt: now,
-   });
-   await fetch(SHEET_URL + "?" + params.toString(), {
-     method: "GET",   // ← changed from POST to GET
-     mode: "no-cors",
-   });
+    const params = new URLSearchParams({
+      name:        currentGuest.name,
+      phone:       phone,
+      status:      attending ? "Attending" : "Not Attending",
+      partySize:   attending ? partySize : 0,
+      note:        note,
+      submittedAt: now,
+    });
+    await fetch(SHEET_URL + "?" + params.toString(), {
+      method: "GET",
+      mode: "no-cors",
+    });
     document.getElementById("sms-badge").textContent = "✅ Response saved!";
   } catch(err) {
     document.getElementById("sms-badge").textContent = "⚠️ Couldn't save — check your connection.";
