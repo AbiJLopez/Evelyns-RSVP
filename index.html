@@ -8,7 +8,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Georgia, serif; background: #FDF6F0; }
 
-    /* ── Confetti ── */
     .confetti-piece {
       position: fixed; top: -10px; pointer-events: none; z-index: 999;
       animation: fall 1.8s ease-in forwards;
@@ -18,7 +17,6 @@
       100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
     }
 
-    /* ── Shared ── */
     .screen { display: none; min-height: 100vh; }
     .screen.active { display: flex; flex-direction: column; }
 
@@ -42,7 +40,6 @@
 
     .body-pad { flex: 1; padding: 32px 24px; }
 
-    /* ── Buttons ── */
     .btn-primary {
       display: block; width: 100%; padding: 15px;
       background: linear-gradient(135deg, #C45C7A, #E8899A);
@@ -71,7 +68,6 @@
       font-size: 13px; font-family: Georgia, serif; cursor: pointer; margin-bottom: 10px;
     }
 
-    /* ── Name search ── */
     .search-wrap { position: relative; margin-bottom: 12px; }
     .name-input {
       width: 100%; padding: 15px 16px;
@@ -96,7 +92,6 @@
     .host-links { text-align: center; border-top: 1px solid #F2C4CE; padding-top: 20px; display: flex; justify-content: center; gap: 16px; }
     .host-link { background: none; border: none; color: #C45C7A; font-size: 12px; cursor: pointer; font-family: Georgia, serif; opacity: 0.7; }
 
-    /* ── RSVP form ── */
     .rsvp-question { font-size: 16px; font-weight: 600; color: #2D1B2E; margin-bottom: 16px; text-align: center; }
     .attend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
     .attend-btn {
@@ -122,7 +117,6 @@
 
     .extra-fields { display: none; }
     .field-label { font-size: 13px; color: #2D1B2E; opacity: 0.65; margin-bottom: 8px; }
-    .field-note { font-size: 11px; color: #2D1B2E; opacity: 0.4; margin-top: 4px; }
     .text-input, .text-area {
       width: 100%; padding: 12px 14px; margin-bottom: 16px;
       border: 2px solid #F2C4CE; border-radius: 12px;
@@ -140,14 +134,11 @@
     }
     .submit-btn.ready { opacity: 1; }
 
-    /* ── Done screen ── */
     #screen-done { align-items: center; justify-content: center; padding: 40px 24px; text-align: center; background: #FDF6F0; }
     .done-emoji { font-size: 64px; margin-bottom: 16px; }
     .done-title { font-size: 26px; font-weight: 700; color: #C45C7A; margin-bottom: 8px; }
     .done-msg { font-size: 15px; color: #2D1B2E; opacity: 0.7; line-height: 1.6; max-width: 320px; margin-bottom: 28px; }
-    .sms-badge { background: #F9EEF3; border: 1px solid #F2C4CE; border-radius: 14px; padding: 14px 20px; font-size: 13px; color: #C45C7A; margin-bottom: 28px; }
 
-    /* ── Host dashboard ── */
     #screen-host { background: #2D1B2E; color: #fff; }
     #screen-host .hero-sm { margin-bottom: 0; }
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 20px 16px 0; }
@@ -161,10 +152,10 @@
     .guest-name { font-weight: 600; font-size: 15px; }
     .guest-phone { font-size: 11px; opacity: 0.45; margin-top: 2px; }
     .pill { border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; border: 1px solid; }
-    .guest-detail { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); font-size: 12px; opacity: 0.7; display: none; }
+    .guest-detail { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); font-size: 12px; opacity: 0.7; }
     .host-actions { padding: 20px 16px 0; display: flex; gap: 10px; flex-direction: column; }
+    .loading-msg { color: rgba(255,255,255,0.5); font-size: 13px; text-align: center; padding: 20px; }
 
-    /* ── Admin ── */
     #screen-admin { background: #2D1B2E; color: #fff; }
     .admin-body { padding: 20px 16px; }
     .admin-input {
@@ -277,7 +268,7 @@
     <input class="admin-input" id="admin-name" type="text" placeholder="e.g. The Smith Family or Cousin Jake" />
     <button class="btn-primary" style="margin-bottom:24px;" onclick="addGuest()">Add Guest</button>
     <div class="section-label" id="admin-count">Guest List</div>
-    <div id="admin-list"></div>
+    <div id="admin-list"><div class="loading-msg">Loading guests…</div></div>
     <div class="admin-actions">
       <button class="btn-dark-ghost" style="flex:1" onclick="showScreen('host')">View Responses</button>
       <button class="btn-dark-ghost" style="flex:1" onclick="showScreen('enter')">← Back</button>
@@ -286,33 +277,28 @@
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-const STORAGE_KEY = "evelyn_rsvp_html_v1";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxQkQiogxWydCbYNidX_ToFGijWue_aaw5MVdjrsk0eOU418uN_iXpFKZGfAG6iYXGH/exec";
 
-let guests = [
-  { id:"g1", name:"The Johnson Family" },
-  { id:"g2", name:"The Martinez Family" },
-  { id:"g3", name:"The Williams Family" },
-  { id:"g4", name:"The Davis Family" },
-  { id:"g5", name:"Aunt Sarah" },
-  { id:"g6", name:"Uncle Mike" },
-  { id:"g7", name:"Grandma & Grandpa" },
-  { id:"g8", name:"The Taylor Family" },
-];
-let responses  = {};
+let guests    = [];
+let responses = {};
 let currentGuest = null;
 let attending    = null;
 let partySize    = 1;
 
-// ── Persist ────────────────────────────────────────────────────────────────
-function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ guests, responses })); } catch(_) {}
+// ── Local storage (responses only) ────────────────────────────────────────
+function saveResponses() {
+  try { localStorage.setItem("evelyn_responses", JSON.stringify(responses)); } catch(_) {}
 }
-function load() {
+function loadResponses() {
+  try { responses = JSON.parse(localStorage.getItem("evelyn_responses") || "{}"); } catch(_) {}
+}
+
+// ── Fetch guest list from Google Sheets ───────────────────────────────────
+async function loadGuests() {
   try {
-    const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    if (d.guests)    guests    = d.guests;
-    if (d.responses) responses = d.responses;
+    const res  = await fetch(SHEET_URL + "?action=getGuests");
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) guests = data;
   } catch(_) {}
 }
 
@@ -336,8 +322,8 @@ function showScreen(id) {
 }
 
 // ── Name search ────────────────────────────────────────────────────────────
-const nameInput = document.getElementById("name-input");
-const suggestBox = document.getElementById("suggestions");
+const nameInput   = document.getElementById("name-input");
+const suggestBox  = document.getElementById("suggestions");
 const searchError = document.getElementById("search-error");
 
 nameInput.addEventListener("input", () => {
@@ -360,7 +346,7 @@ function handleSearch() {
   const val = nameInput.value.trim();
   const matches = guests.filter(g => fuzzy(val, g.name));
   if (matches.length === 1) { selectGuest(matches[0].id); return; }
-  if (matches.length > 1) { showError("We found a few matches — tap your name above."); return; }
+  if (matches.length > 1)   { showError("We found a few matches — tap your name above."); return; }
   showError("We couldn't find that name. Try your last name or family name.");
 }
 
@@ -371,7 +357,7 @@ function showError(msg) {
 }
 
 function selectGuest(id) {
-  currentGuest = guests.find(g => g.id === id);
+  currentGuest = guests.find(g => String(g.id) === String(id));
   suggestBox.style.display = "none";
   attending = null; partySize = 1;
   document.getElementById("rsvp-guest-name").textContent = currentGuest.name;
@@ -403,11 +389,9 @@ function changeSize(delta) {
 
 function checkReady() {
   const phone = document.getElementById("phone-input").value.trim();
-  const btn = document.getElementById("submit-btn");
+  const btn   = document.getElementById("submit-btn");
   btn.className = "submit-btn" + (attending !== null && phone ? " ready" : "");
 }
-
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxQkQiogxWydCbYNidX_ToFGijWue_aaw5MVdjrsk0eOU418uN_iXpFKZGfAG6iYXGH/exec";
 
 async function submitRSVP() {
   const phone = document.getElementById("phone-input").value.trim();
@@ -417,21 +401,21 @@ async function submitRSVP() {
 
   // Save locally
   responses[currentGuest.id] = { attending, partySize, phone, note, submittedAt: now };
-  save();
+  saveResponses();
 
-  // Show done screen immediately so guest isn't waiting
+  // Show done screen immediately
   document.getElementById("done-emoji").textContent = attending ? "🎉" : "💌";
   document.getElementById("done-title").textContent = attending ? "See you there!" : "We'll miss you!";
   document.getElementById("done-msg").textContent   = attending
     ? "Can't wait to celebrate Evelyn's big day with you! 🎂"
-    : "Thank you for letting us know. We'll be thinking of you!";
-  //document.getElementById("sms-badge").textContent = "📱 Sending confirmation…";
+    : "Thank you for letting us know. We'll miss you!";
   showScreen("done");
   launchConfetti();
 
-  // Send to Google Sheets via GET with URL parameters
+  // Send to Google Sheets
   try {
     const params = new URLSearchParams({
+      action:      "getRSVP",
       name:        currentGuest.name,
       phone:       phone,
       status:      attending ? "Attending" : "Not Attending",
@@ -439,14 +423,8 @@ async function submitRSVP() {
       note:        note,
       submittedAt: now,
     });
-    await fetch(SHEET_URL + "?" + params.toString(), {
-      method: "GET",
-      mode: "no-cors",
-    });
-    //document.getElementById("sms-badge").textContent = "✅ Response saved!";
-  } catch(err) {
-    //document.getElementById("sms-badge").textContent = "⚠️ Couldn't save — check your connection.";
-  }
+    await fetch(SHEET_URL + "?" + params.toString(), { method:"GET", mode:"no-cors" });
+  } catch(_) {}
 }
 
 function resetToStart() {
@@ -462,11 +440,11 @@ function launchConfetti() {
   for (let i = 0; i < 28; i++) {
     const el = document.createElement("div");
     el.className = "confetti-piece";
-    el.style.left   = Math.random()*100 + "%";
-    el.style.width  = el.style.height = (6 + Math.random()*8) + "px";
+    el.style.left   = Math.random()*100+"%";
+    el.style.width  = el.style.height = (6+Math.random()*8)+"px";
     el.style.background = colors[i % colors.length];
-    el.style.borderRadius = Math.random() > .5 ? "50%" : "2px";
-    el.style.animationDelay = (Math.random()*.6) + "s";
+    el.style.borderRadius = Math.random()>.5 ? "50%" : "2px";
+    el.style.animationDelay = (Math.random()*.6)+"s";
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 2400);
   }
@@ -477,7 +455,7 @@ function renderDashboard() {
   const att  = guests.filter(g => responses[g.id]?.attending === true);
   const dec  = guests.filter(g => responses[g.id]?.attending === false);
   const pend = guests.filter(g => !responses[g.id]);
-  const total = att.reduce((s,g) => s + (responses[g.id]?.partySize||1), 0);
+  const total = att.reduce((s,g) => s+(responses[g.id]?.partySize||1), 0);
 
   document.getElementById("stats-grid").innerHTML = `
     <div class="stat-card"><div class="stat-num" style="color:#6fcf97">${att.length}</div><div class="stat-label">Attending</div><div class="stat-sub" style="color:#6fcf97">${total} total guests</div></div>
@@ -485,30 +463,31 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-num" style="color:#D4A853">${pend.length}</div><div class="stat-label">Pending</div></div>
   `;
 
-  document.getElementById("guest-list").innerHTML = guests.map(g => {
-    const r = responses[g.id];
-    const s = !r ? "pending" : r.attending ? "yes" : "no";
-    const pill = {
-      yes:     { bg:"#6fcf9722", border:"#6fcf97", color:"#6fcf97", label:"✓ Attending" },
-      no:      { bg:"#E8899A22", border:"#E8899A", color:"#E8899A", label:"✗ Declining" },
-      pending: { bg:"#D4A85322", border:"#D4A853", color:"#D4A853", label:"⏳ Pending" },
-    }[s];
-    const detail = r ? `<div class="guest-detail" style="display:block;">
-      ${r.attending ? `Party of <strong style="color:#D4A853">${r.partySize}</strong> · ` : ""}
-      ${r.note ? `"${r.note}" · ` : ""}
-      <span style="opacity:.5">${r.submittedAt}</span>
-    </div>` : "";
-    return `<div class="guest-card">
-      <div class="guest-row">
-        <div>
-          <div class="guest-name">${g.name}</div>
-          ${r?.phone ? `<div class="guest-phone">${r.phone}</div>` : ""}
-        </div>
-        <div class="pill" style="background:${pill.bg};border-color:${pill.border};color:${pill.color}">${pill.label}</div>
-      </div>
-      ${detail}
-    </div>`;
-  }).join("");
+  document.getElementById("guest-list").innerHTML = guests.length === 0
+    ? '<div class="loading-msg">Loading guest list…</div>'
+    : guests.map(g => {
+        const r = responses[g.id];
+        const s = !r ? "pending" : r.attending ? "yes" : "no";
+        const pill = {
+          yes:     { bg:"#6fcf9722", border:"#6fcf97", color:"#6fcf97", label:"✓ Attending" },
+          no:      { bg:"#E8899A22", border:"#E8899A", color:"#E8899A", label:"✗ Declining" },
+          pending: { bg:"#D4A85322", border:"#D4A853", color:"#D4A853", label:"⏳ Pending" },
+        }[s];
+        return `<div class="guest-card">
+          <div class="guest-row">
+            <div>
+              <div class="guest-name">${g.name}</div>
+              ${r?.phone ? `<div class="guest-phone">${r.phone}</div>` : ""}
+            </div>
+            <div class="pill" style="background:${pill.bg};border-color:${pill.border};color:${pill.color}">${pill.label}</div>
+          </div>
+          ${r ? `<div class="guest-detail">
+            ${r.attending ? `Party of <strong style="color:#D4A853">${r.partySize}</strong> · ` : ""}
+            ${r.note ? `"${r.note}" · ` : ""}
+            <span style="opacity:.5">${r.submittedAt}</span>
+          </div>` : ""}
+        </div>`;
+      }).join("");
 }
 
 function downloadCSV() {
@@ -529,28 +508,41 @@ function downloadCSV() {
 // ── Admin ──────────────────────────────────────────────────────────────────
 function renderAdmin() {
   document.getElementById("admin-count").textContent = `Guest List (${guests.length})`;
-  document.getElementById("admin-list").innerHTML = guests.map(g =>
-    `<div class="admin-guest-row">
-      <span class="admin-guest-name">${g.name}</span>
-      <button class="remove-btn" onclick="removeGuest('${g.id}')">×</button>
-    </div>`
-  ).join("");
+  document.getElementById("admin-list").innerHTML = guests.length === 0
+    ? '<div class="loading-msg">No guests yet. Add one above!</div>'
+    : guests.map(g =>
+        `<div class="admin-guest-row">
+          <span class="admin-guest-name">${g.name}</span>
+          <button class="remove-btn" onclick="removeGuest('${g.id}')">×</button>
+        </div>`
+      ).join("");
 }
 
-function addGuest() {
+async function addGuest() {
   const name = document.getElementById("admin-name").value.trim();
   if (!name) return;
-  guests.push({ id:"g"+Date.now(), name });
+  const id = "g" + Date.now();
+  guests.push({ id, name });
   document.getElementById("admin-name").value = "";
-  save(); renderAdmin();
+  renderAdmin();
+  // Save to Google Sheets
+  try {
+    const params = new URLSearchParams({ action:"addGuest", id, name });
+    await fetch(SHEET_URL + "?" + params.toString(), { method:"GET", mode:"no-cors" });
+  } catch(_) {}
 }
 
-function removeGuest(id) {
-  guests = guests.filter(g => g.id !== id);
-  save(); renderAdmin();
+async function removeGuest(id) {
+  guests = guests.filter(g => String(g.id) !== String(id));
+  renderAdmin();
+  // Remove from Google Sheets
+  try {
+    const params = new URLSearchParams({ action:"removeGuest", id });
+    await fetch(SHEET_URL + "?" + params.toString(), { method:"GET", mode:"no-cors" });
+  } catch(_) {}
 }
 
-// ── Admin password ────────────────────────────────────────────────────────
+// ── Admin password ─────────────────────────────────────────────────────────
 function promptAdminPassword() {
   const pw = prompt("Enter password to manage guest list:");
   if (pw === "Evelyn073125") {
@@ -561,7 +553,8 @@ function promptAdminPassword() {
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
-load();
+loadResponses();
+loadGuests();
 </script>
 </body>
 </html>
