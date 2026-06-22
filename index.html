@@ -190,7 +190,8 @@
     <div id="search-error" class="search-error"></div>
     <button class="btn-primary" onclick="handleSearch()">Find My Invitation →</button>
     <div class="host-links">
-      <button class="host-link" onclick="showScreen('host')">View Responses</button>
+
+      <button class="host-link" onclick="promptHostPassword()">View Responses</button>
       <button class="host-link" onclick="promptAdminPassword()">Manage Guest List</button>
     </div>
   </div>
@@ -568,6 +569,16 @@ async function removeGuest(id) {
     const params = new URLSearchParams({ action:"removeGuest", id });
     await fetch(SHEET_URL + "?" + params.toString(), { method:"GET", mode:"no-cors" });
   } catch(_) {}
+}
+
+// ── Host password ──────────────────────────────────────────────────────────
+function promptHostPassword() {
+  const pw = prompt("Enter password to view responses:");
+  if (pw === "Evelyn073125") {
+    showScreen("host");
+  } else if (pw !== null) {
+    alert("Incorrect password. Please try again.");
+  }
 }
 
 // ── Admin password ─────────────────────────────────────────────────────────
