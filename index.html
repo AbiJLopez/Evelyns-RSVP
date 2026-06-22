@@ -285,12 +285,35 @@ let currentGuest = null;
 let attending    = null;
 let partySize    = 1;
 
-// ── Local storage (responses only) ────────────────────────────────────────
+// ── Responses from Google Sheets ──────────────────────────────────────────
 function saveResponses() {
-  try { localStorage.setItem("evelyn_responses", JSON.stringify(responses)); } catch(_) {}
+  // no-op: responses now come from Google Sheets
 }
 function loadResponses() {
-  try { responses = JSON.parse(localStorage.getItem("evelyn_responses") || "{}"); } catch(_) {}
+  // no-op: responses now come from Google Sheets
+}
+async function fetchResponses() {
+  try {
+    const res  = await fetch(SHEET_URL + "?action=getResponses");
+    const data = await res.json();
+    // Convert array of rows into a map keyed by guest name for easy lookup
+    responses = {};
+    if (Array.isArray(data)) {
+      data.forEach(r => {
+        // Match by name to guest id
+        const g = guests.find(g => g.name === r.name);
+        if (g) {
+          responses[g.id] = {
+            attending:   r.status === "Attending",
+            partySize:   r.partySize,
+            phone:       r.phone,
+            note:        r.note,
+            submittedAt: r.submittedAt
+          };
+        }
+      });
+    }
+  } catch(_) {}
 }
 
 // ── Fetch guest list from Google Sheets ───────────────────────────────────
@@ -313,10 +336,15 @@ function fuzzy(query, name) {
 }
 
 // ── Screen routing ─────────────────────────────────────────────────────────
-function showScreen(id) {
+async function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById("screen-"+id).classList.add("active");
-  if (id === "host")  renderDashboard();
+  if (id === "host") {
+    document.getElementById("guest-list").innerHTML = '<div class="loading-msg">Loading responses…</div>';
+    document.getElementById("stats-grid").innerHTML = '';
+    await fetchResponses();
+    renderDashboard();
+  }
   if (id === "admin") renderAdmin();
   window.scrollTo(0,0);
 }
@@ -553,7 +581,6 @@ function promptAdminPassword() {
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
-loadResponses();
 loadGuests();
 </script>
 </body>
